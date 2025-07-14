@@ -1,14 +1,14 @@
 from django.shortcuts import render, redirect
-from accounts.forms import RegisterUserForm
+from accounts.forms import SignUpForm
 from django.views import View
 
-class RegisterView(View):
+class SignUpView(View):
     def get(self, request):
-        form = RegisterUserForm()
+        form = SignUpForm()
         return render(request, 'form.html', {'form': form})
 
     def post(self, request):
-        form = RegisterUserForm(request.POST)
+        form = SignUpForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
             user.set_password(form.cleaned_data['password'])
