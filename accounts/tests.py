@@ -39,3 +39,18 @@ def test_signup_password_and_confirm_password_mismatch():
     response = c.post(url, data)
     assert response.status_code == 200
     assert not User.objects.filter(username='test').exists()
+
+@pytest.mark.django_db
+def test_signup_user_already_exists(user):
+    c = Client()
+    url = reverse('signup')
+    data = {
+        'username': 'test',
+        'password': 'polska123',
+        'confirm_password': 'polska123',
+    }
+    response = c.post(url, data)
+    assert response.status_code == 200
+    form = response.context['form']
+    assert 'username' in form.errors
+    assert 'A user with that username already exists.' in form.errors['username']
