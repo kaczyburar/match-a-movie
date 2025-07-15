@@ -10,7 +10,7 @@ class HomeView(View):
         if not request.user.is_authenticated:
             return redirect('login')
         else:
-            return redirect('register')
+            return redirect('create_room')
     def post(self, request):
         return redirect('register')
 
