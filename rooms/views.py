@@ -2,9 +2,13 @@ from django.shortcuts import render
 from django.views import View
 from rooms.forms import CreateRoomForm
 from django.shortcuts import render, redirect
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 
-class CreateRoomView(View):
+class CreateRoomView(LoginRequiredMixin, View):
+    login_url = '/accounts/login/'
+    redirect_field_name = 'next'
+
     def get(self, request):
         form = CreateRoomForm()
         return render(request, 'form.html', {'form': form})
