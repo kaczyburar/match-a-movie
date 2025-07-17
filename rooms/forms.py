@@ -4,8 +4,13 @@ from rooms.models import Room
 
 
 class CreateRoomForm(forms.ModelForm):
-    room_name = forms.CharField(widget=forms.TextInput())
+    name = forms.CharField(widget=forms.TextInput())
+
+    def clean(self):
+        data = super().clean()
+        if Room.objects.filter(name__iexact=data['name']).exists():
+            self.add_error("name", "This name is already taken")
 
     class Meta:
         model = Room
-        fields = ['room_name']
+        fields = ['name']

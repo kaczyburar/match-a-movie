@@ -44,3 +44,8 @@ class LoginView(View):
                 login(request, user)
                 return redirect('home')
         return render(request, 'nav_bar.html', {'form': form})
+
+class LogoutView(View):
+    def get(self, request):
+        logout(request)
+        return redirect('home')

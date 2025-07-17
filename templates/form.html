@@ -9,5 +9,11 @@
     <input type="submit">
     </form>
 
-    <p><a href="{% url 'register' %}"> Register</a></p>
+    {% if user.is_authenticated %}
+    {% else %}
+        <p><a href="{% url 'register' %}"> Register</a></p>
+    {% endif %}
+
+
+
 {% endblock %}
