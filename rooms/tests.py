@@ -45,4 +45,19 @@ def test_user_can_access_room_detail_if_member_or_host(room, user):
     response = client.get(url)
     assert response.status_code == 200
 
+@pytest.mark.django_db
+def test_user_cant_access_room_detail_if_is_not_member_or_host(room, user):
+    client = Client()
+    client.force_login(user[1])
+    url = reverse('room_detail', kwargs={'pk': room.pk})
+    response = client.get(url)
+    assert response.status_code == 403
+
+@pytest.mark.django_db
+def test_join_room_view(room, user):
+    client = Client()
+    client.force_login(user[0])
+    url = reverse('join_room')
+    response = client.get(url)
+    assert response.status_code == 200
 

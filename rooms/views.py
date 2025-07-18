@@ -3,7 +3,7 @@ from django.shortcuts import render
 from django.views import View
 from django.views.generic import DetailView
 
-from rooms.forms import CreateRoomForm
+from rooms.forms import CreateRoomForm, JoinRoomForm
 from django.shortcuts import render, redirect
 from django.contrib.auth.mixins import LoginRequiredMixin
 
@@ -36,4 +36,12 @@ class RoomDetailView(LoginRequiredMixin,View):
         if request.user != room.host and request.user not in room.members.all():
             raise PermissionDenied("You are not authorized to view this room.")
         return render(request,'room_detail.html', {'pk': pk})
+
+class JoinRoomView(LoginRequiredMixin, View):
+    login_url = '/accounts/login/'
+    redirect_field_name = 'next'
+    def get(self, request):
+        form = JoinRoomForm()
+        return render(request, 'form.html', {'form': form})
+
 
