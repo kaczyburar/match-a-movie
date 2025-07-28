@@ -8,25 +8,52 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 from rooms.models import Room
+from django.contrib.auth.models import User
 
-
-class CreateRoomView(LoginRequiredMixin, View):
+class RoomView(LoginRequiredMixin, View):
     login_url = '/accounts/login/'
     redirect_field_name = 'next'
 
     def get(self, request):
-        form = CreateRoomForm()
-        return render(request, 'form.html', {'form': form})
-
+        create_room_form = CreateRoomForm()
+        join_room_form = JoinRoomForm()
+        return render(request, 'room_menu.html', {
+            'create_room_form': create_room_form,
+            'join_room_form': join_room_form
+        })
     def post(self, request):
-        form = CreateRoomForm(request.POST)
-        if form.is_valid():
-            room = form.save(commit=False)
-            room.host = request.user
-            room.save()
-            room.members.add(request.user)
-            return redirect('room_detail', room.id)
-        return render(request, 'form.html', {'form': form})
+        if 'create_room' in request.POST:
+            form = CreateRoomForm(request.POST)
+            if form.is_valid():
+                room = form.save(commit=False)
+                room.host = request.user
+                room.save()
+                room.members.add(request.user)
+                return redirect('room_detail', room.id)
+            else:
+                return render(request, 'room_menu.html', {
+                    'create_room_form': form,
+                    'join_room_form': JoinRoomForm()
+                })
+
+
+        elif 'join_room' in request.POST:
+            form = JoinRoomForm(request.POST)
+            if form.is_valid():
+                room_name = form.cleaned_data['name']
+                room = Room.objects.get(name=room_name)
+                if request.user != room.host and request.user not in room.members.all():
+                    raise PermissionDenied("You are not authorized to view this room.")
+                else:
+                    return redirect('room_detail', room.id)
+            else:
+                return render(request, 'room_menu.html', {
+                    'create_room_form': CreateRoomForm(),
+                    'join_room_form': form
+                })
+
+        return self.get(request)
+
 
 class RoomDetailView(LoginRequiredMixin,View):
     login_url = '/accounts/login/'
@@ -35,13 +62,24 @@ class RoomDetailView(LoginRequiredMixin,View):
         room = Room.objects.get(pk=pk)
         if request.user != room.host and request.user not in room.members.all():
             raise PermissionDenied("You are not authorized to view this room.")
-        return render(request,'room_detail.html', {'pk': pk})
 
-class JoinRoomView(LoginRequiredMixin, View):
-    login_url = '/accounts/login/'
-    redirect_field_name = 'next'
-    def get(self, request):
-        form = JoinRoomForm()
-        return render(request, 'form.html', {'form': form})
+        all_users = User.objects.exclude(
+            id=request.user.id
+        ).exclude(
+            id__in=room.members.all().values_list('id', flat=True)
+        ).exclude(
+            id=room.host.id
+        ).values('id','username')
+
+        users_list = list(all_users)
+        context = {
+            'pk': pk,
+            'room': room,
+            'users_data': users_list,
+        }
+
+        return render(request,'room_detail.html', context)
+
+
 
 

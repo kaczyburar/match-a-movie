@@ -1,3 +1,18 @@
+{% extends 'nav_bar.html' %}
+{% load static %}
+{% block content %}
+
 <form>
-    <input type='text' name='search_name' id='serach_name' placeholder='Search friend..'>
+    <input type='text' name='search_name' id='search_name' placeholder='Search friend..'>
 </form>
+
+<div id="search-results" style="display: none;"></div>
+
+<script>
+
+const usersData = {{ users_data|safe }};
+</script>
+
+<script src="{% static 'js/search.js' %}"></script>
+
+{% endblock %}

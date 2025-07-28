@@ -7,13 +7,14 @@ from rooms.models import Room
 
 
 @pytest.mark.django_db
-def test_create_room_view_creates_room_successfully(user):
+def test_room_menu_view_creates_room_successfully(user):
     client = Client()
     client.force_login(user[0])
 
-    url = reverse('create_room')
+    url = reverse('room_menu')
     data = {
-        'name': 'test'
+        'name': 'test',
+        'create_room': ''
     }
     response = client.post(url, data)
     assert response.status_code == 302
@@ -23,15 +24,16 @@ def test_create_room_view_creates_room_successfully(user):
     assert user[0] in room.members.all()
 
 @pytest.mark.django_db
-def test_create_room_view_creation_room_unsuccessfully(room, user):
+def test_room_menu_view_creation_room_unsuccessfully(room, user):
     client = Client()
     client.force_login(user[0])
-    url = reverse('create_room')
+    url = reverse('room_menu')
     data = {
-        'name': 'Seans'
+        'name': 'Seans',
+        'create_room': ''
     }
     response = client.post(url, data)
-    form = response.context['form']
+    form = response.context['create_room_form']
 
     assert response.status_code == 200
     assert 'name' in form.errors
@@ -54,10 +56,29 @@ def test_user_cant_access_room_detail_if_is_not_member_or_host(room, user):
     assert response.status_code == 403
 
 @pytest.mark.django_db
-def test_join_room_view(room, user):
+def test_room_menu_view_join_room_successfully_if_member_or_host(room, user):
     client = Client()
     client.force_login(user[0])
-    url = reverse('join_room')
-    response = client.get(url)
-    assert response.status_code == 200
+    url = reverse('room_menu')
+    data = {
+        'name': 'Seans',
+        'join_room': ''
+    }
+    response = client.post(url, data)
+    assert response.status_code == 302
 
+@pytest.mark.django_db
+def test_room_menu_view_join_room_unsuccessfully_room_not_exists(user):
+    client = Client()
+    client.force_login(user[0])
+    url = reverse('room_menu')
+    data = {
+        'name': 'NonExistentRoom',
+        'join_room': ''
+    }
+    response = client.post(url, data)
+    form = response.context['join_room_form']
+
+    assert response.status_code == 200
+    assert 'name' in form.errors
+    assert 'This room does not exist' in form.errors['name']

@@ -1,0 +1,18 @@
+{% extends 'nav_bar.html' %}
+{% block content %}
+<form method="post">
+    {% csrf_token %}
+
+    <!-- Tworzenie pokoju -->
+    <h3>Utwórz pokój</h3>
+    {{ create_room_form.name }}
+    <button type="submit" name="create_room">Utwórz</button>
+</form>
+<form method="post">
+    {% csrf_token %}
+    <!-- Dołączanie do pokoju -->
+    <h3>Dołącz do pokoju</h3>
+    {{ join_room_form.name }}
+    <button type="submit" name="join_room">Dołącz</button>
+</form>
+{% endblock %}
