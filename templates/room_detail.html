@@ -2,25 +2,14 @@
 {% load static %}
 {% block content %}
 
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-        {% endfor %}
-    {% endif %}
-
 <form method="post">
     {% csrf_token %}
+    <input type="hidden" id="room-pk" value="{{ room.pk }}">
     <input type='text' name='search_name' id='search_name' placeholder='Search friend..'>
-    <input type="submit" value='Add Friend'>
+    <button type="submit">Dodaj użytkownika</button>
 </form>
 
 <div id="search-results" style="display: none;"></div>
-
-<script>
-
-const usersData = {{ users_data|safe }};
-</script>
-
 <script src="{% static 'js/search.js' %}"></script>
 
    <ul>

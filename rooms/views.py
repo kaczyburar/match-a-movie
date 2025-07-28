@@ -10,6 +10,7 @@ from django.contrib import messages
 
 from rooms.models import Room
 from django.contrib.auth.models import User
+from django.http import JsonResponse
 
 class RoomView(LoginRequiredMixin, View):
     login_url = '/accounts/login/'
@@ -64,23 +65,9 @@ class RoomDetailView(LoginRequiredMixin,View):
         if request.user != room.host and request.user not in room.members.all():
             raise PermissionDenied("You are not authorized to view this room.")
 
-        all_users = User.objects.exclude(
-            id=request.user.id
-        ).exclude(
-            id__in=room.members.all().values_list('id', flat=True)
-        ).exclude(
-            id=room.host.id
-        ).values('id','username')
-
-
-        users_list = list(all_users)
-
-
-
         context = {
             'pk': pk,
             'room': room,
-            'users_data': users_list,
         }
 
         return render(request,'room_detail.html', context)
@@ -107,6 +94,33 @@ class RoomDetailView(LoginRequiredMixin,View):
 
         return redirect('room_detail', pk=pk)
 
+
+def search_users(request, pk):
+
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Unauthorized'}, status=401)
+
+    try:
+        room = Room.objects.get(pk=pk)
+        if request.user != room.host and request.user not in room.members.all():
+            return JsonResponse({'error': 'Access denied'}, status=403)
+    except Room.DoesNotExist:
+        return JsonResponse({'error': 'Room not found'}, status=404)
+
+
+    query = request.GET.get('q', '').strip()
+
+    if len(query) < 3:
+        return JsonResponse({'users': []})
+
+
+    users = User.objects.exclude(
+        id__in=room.members.all().values_list('id', flat=True)
+    ).filter(
+        username__icontains=query
+    ).values('id', 'username')[:10]
+
+    return JsonResponse({'users': list(users)})
 
 
 
