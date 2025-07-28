@@ -6,6 +6,7 @@ from django.views.generic import DetailView
 from rooms.forms import CreateRoomForm, JoinRoomForm
 from django.shortcuts import render, redirect
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib import messages
 
 from rooms.models import Room
 from django.contrib.auth.models import User
@@ -71,7 +72,11 @@ class RoomDetailView(LoginRequiredMixin,View):
             id=room.host.id
         ).values('id','username')
 
+
         users_list = list(all_users)
+
+
+
         context = {
             'pk': pk,
             'room': room,
@@ -79,6 +84,28 @@ class RoomDetailView(LoginRequiredMixin,View):
         }
 
         return render(request,'room_detail.html', context)
+
+    def post(self, request, pk):
+        room = Room.objects.get(pk=pk)
+
+        username = request.POST.get('search_name')
+
+        if username:
+            try:
+                user_to_add = User.objects.get(username=username)
+
+                if user_to_add not in room.members.all():
+                    room.members.add(user_to_add)
+                    messages.success(request, f'Użytkownik {user_to_add.username} został dodany do pokoju.')
+                else:
+                    messages.warning(request, f'Użytkownik {user_to_add.username} już jest w pokoju.')
+
+            except User.DoesNotExist:
+                messages.error(request, f'Użytkownik {username} nie istnieje.')
+        else:
+            messages.error(request, 'Nie wybrano użytkownika.')
+
+        return redirect('room_detail', pk=pk)
 
 
 

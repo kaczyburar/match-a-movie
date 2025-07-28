@@ -40,5 +40,4 @@ function selectUser(username, userId) {
     document.getElementById('search_name').value = username;
     document.getElementById('search-results').style.display = 'none';
 
-    console.log('Wybrano użytkownika:', username, 'ID:', userId);
 }

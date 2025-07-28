@@ -2,8 +2,16 @@
 {% load static %}
 {% block content %}
 
-<form>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+<form method="post">
+    {% csrf_token %}
     <input type='text' name='search_name' id='search_name' placeholder='Search friend..'>
+    <input type="submit" value='Add Friend'>
 </form>
 
 <div id="search-results" style="display: none;"></div>
@@ -15,4 +23,12 @@ const usersData = {{ users_data|safe }};
 
 <script src="{% static 'js/search.js' %}"></script>
 
+   <ul>
+    <li>{{ room.host.username }} (Host)</li>
+    {% for member in room.members.all %}
+        {% if member != room.host %}
+            <li>{{ member.username }}</li>
+        {% endif %}
+    {% endfor %}
+    </ul>
 {% endblock %}
