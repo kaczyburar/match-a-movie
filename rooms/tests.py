@@ -1,6 +1,9 @@
 
 import pytest
+from _pytest import pytester
 from django.contrib.auth.models import User
+from django.contrib.messages import get_messages
+from django.core.exceptions import PermissionDenied
 from django.test import Client
 from django.urls import reverse
 from rooms.models import Room
@@ -82,3 +85,75 @@ def test_room_menu_view_join_room_unsuccessfully_room_not_exists(user):
     assert response.status_code == 200
     assert 'name' in form.errors
     assert 'This room does not exist' in form.errors['name']
+
+@pytest.mark.django_db
+def test_room_detail_get_as_host(client, user, room):
+    client.force_login(user[0])
+    url = reverse('room_detail', kwargs={'pk': room.pk})
+    response = client.get(url)
+
+    assert response.status_code == 200
+    assert f'{user[0].username} (Host)' in response.content.decode()
+
+@pytest.mark.django_db
+def test_room_detail_get_as_member(client, user, room):
+    room.members.add(user[1])
+    client.force_login(user[1])
+    url = reverse('room_detail', kwargs={'pk': room.pk})
+
+    response = client.get(url)
+    assert response.status_code == 200
+    assert user[1].username in response.content.decode()
+
+@pytest.mark.django_db
+def test_room_detail_get_unauthorized_user(client, room):
+    unauthorized_user = User.objects.create_user(username='unauthorized', password='test12345')
+    client.force_login(unauthorized_user)
+    url = reverse('room_detail', kwargs={'pk': room.pk})
+    response = client.get(url)
+
+    assert response.status_code == 403
+
+@pytest.mark.django_db
+def test_room_detail_get_anonymous_user(client, room):
+    url = reverse('room_detail', kwargs={'pk': room.pk})
+    response = client.get(url)
+    assert response.status_code == 302
+    assert '/accounts/login/' in response.url
+
+@pytest.mark.django_db
+def test_add_user_to_room_success(client, user, room):
+    client.force_login(user[0])
+    url = reverse('room_detail', kwargs={'pk': room.pk})
+    assert not room.members.filter(username=user[1].username).exists()
+
+    response = client.post(url, {'search_name': user[1].username})
+
+    assert response.status_code == 302
+    room.refresh_from_db()
+    assert room.members.filter(username=user[1].username).exists()
+    messages = list(get_messages(response.wsgi_request))
+    assert len(messages) == 1
+    assert f'{user[1].username} został dodany do pokoju' in str(messages[0])
+
+@pytest.mark.django_db
+def test_add_existing_member_warning(client, user, room):
+    client.force_login(user[0])
+    url = reverse('room_detail', kwargs={'pk': room.pk})
+    response = client.post(url, {'search_name': user[0].username})
+
+    messages = list(get_messages(response.wsgi_request))
+    assert len(messages) == 1
+    assert 'już jest w pokoju' in str(messages[0])
+
+@pytest.mark.django_db
+def test_add_nonexistent_user_error(client, user, room):
+    client.force_login(user[0])
+    url = reverse('room_detail', kwargs={'pk': room.pk})
+    response = client.post(url, {'search_name': 'nonexistent_usr'})
+
+    messages = list(get_messages(response.wsgi_request))
+    assert len(messages) == 1
+    assert 'nie istnieje' in str(messages[0])
+
+
