@@ -1,3 +1,4 @@
+from http.client import responses
 
 import pytest
 from _pytest import pytester
@@ -6,7 +7,7 @@ from django.contrib.messages import get_messages
 from django.core.exceptions import PermissionDenied
 from django.test import Client
 from django.urls import reverse
-from rooms.models import Room
+from rooms.models import Room, JoinRequest
 
 
 @pytest.mark.django_db
@@ -156,4 +157,92 @@ def test_add_nonexistent_user_error(client, user, room):
     assert len(messages) == 1
     assert 'nie istnieje' in str(messages[0])
 
+@pytest.mark.django_db
+def test_user_creates_join_request_when_not_member(client, user, room):
+    client.force_login(user[1])
+    url = reverse('room_menu')
+    data = {
+        'name': 'Seans',
+        'join_room': ''
+    }
+    response = client.post(url, data)
+    assert JoinRequest.objects.filter(room=room, user=user[1]).exists()
+    join_reqeust = JoinRequest.objects.get(room=room, user=user[1])
+    assert join_reqeust.status == 'pending'
+
+@pytest.mark.django_db
+def test_host_can_see_join_reqeust_in_room_detail(client, user, room):
+    JoinRequest.objects.create(room=room, user=user[1])
+    client.force_login(user[0])
+    url = reverse('room_detail', kwargs={'pk': room.pk})
+    response = client.get(url)
+
+    assert response.status_code == 200
+    assert 'join_requests' in response.context
+    assert len(response.context['join_requests']) == 1
+    assert user[1].username in response.content.decode()
+
+@pytest.mark.django_db
+def test_member_cannot_see_join_reqeust(client, user, room):
+    room.members.add(user[1])
+    JoinRequest.objects.create(room=room, user=user[2])
+    client.force_login(user[1])
+    url = reverse('room_detail', kwargs={'pk': room.pk})
+    response = client.get(url)
+
+    assert response.status_code == 200
+    assert len(response.context['join_requests']) == 0
+
+@pytest.mark.django_db
+def test_accept_join_reqeust_success(client, user, room):
+    join_request = JoinRequest.objects.create(room=room, user=user[1])
+    client.force_login(user[0])
+    url = reverse('room_detail', kwargs={'pk': room.pk})
+
+    assert not room.members.filter(username=user[1]).exists()
+
+    response = client.post(url, {
+        'join_request_id': join_request.id,
+        'action': 'accept'
+    })
+
+    assert response.status_code == 302
+    room.refresh_from_db()
+    assert room.members.filter(username=user[1].username).exists()
+    assert not JoinRequest.objects.filter(room=room, user=user[1]).exists()
+
+    messages = list(get_messages(response.wsgi_request))
+    assert len(messages) == 1
+    assert f'{user[1].username} zostal dodany do pokoju' in str(messages[0])
+
+@pytest.mark.django_db
+def test_reject_join_reqeust_success(client, user, room):
+    join_request = JoinRequest.objects.create(room=room, user=user[1])
+    client.force_login(user[0])
+    url = reverse('room_detail', kwargs={'pk': room.pk})
+
+    assert not room.members.filter(username=user[1]).exists()
+
+    response = client.post(url, {
+        'join_request_id': join_request.id,
+        'action': 'reject'
+    })
+    assert response.status_code == 302
+    room.refresh_from_db()
+
+    assert not room.members.filter(username=user[1].username).exists()
+    assert not JoinRequest.objects.filter(room=room, user=user[1]).exists()
+
+@pytest.mark.django_db
+def test_duplicate_join_request_prevention(client, user, room):
+    JoinRequest.objects.create(room=room, user=user[1])
+    client.force_login(user[1])
+    url = reverse('room_menu')
+    data = {
+        'name': 'Seans',
+        'join_room': ''
+    }
+
+    with pytest.raises(Exception):
+        client.post(url, data)
 

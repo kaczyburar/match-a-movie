@@ -11,13 +11,35 @@
 
 <div id="search-results" style="display: none;"></div>
 <script src="{% static 'js/search.js' %}"></script>
-
+    
+    {% if join_requests %}
+    <div class="join-requests">
+        <h3>Join requests</h3>
+        {% for join_request in join_requests %}
+        <div class="request-items">
+            <span>{{ join_request.user.username }}</span>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="join_request_id" value="{{ join_request.id }}">
+                <button type="submit" name="action" value="accept">Akceptuj</button>
+                <button type="submit" name="action" value="reject">Odrzuć</button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    
+    
+   <div class="room-members"> 
    <ul>
-    <li>{{ room.host.username }} (Host)</li>
-    {% for member in room.members.all %}
-        {% if member != room.host %}
-            <li>{{ member.username }}</li>
-        {% endif %}
-    {% endfor %}
-    </ul>
+       <li>{{ room.host.username }} (Host)</li>
+        {% for member in room.members.all %}
+            {% if member != room.host %}
+                <li>{{ member.username }}</li>
+            {% endif %}
+        {% endfor %}
+   </ul>
+   </div>
+    
 {% endblock %}

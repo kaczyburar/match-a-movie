@@ -13,4 +13,5 @@ urlpatterns = [
     path("", accounts_views.HomeView.as_view(), name="home"),
     path('accounts/', include('accounts.urls')),
     path('rooms/', include('rooms.urls')),
+    path('movies/', include('movies.urls')),
 ]

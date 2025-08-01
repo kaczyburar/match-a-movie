@@ -8,7 +8,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 
-from rooms.models import Room
+from rooms.models import Room, JoinRequest
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 
@@ -45,7 +45,10 @@ class RoomView(LoginRequiredMixin, View):
                 room_name = form.cleaned_data['name']
                 room = Room.objects.get(name=room_name)
                 if request.user != room.host and request.user not in room.members.all():
-                    raise PermissionDenied("You are not authorized to view this room.")
+                    JoinRequest.objects.create(
+                        room = room,
+                        user=request.user
+                    )
                 else:
                     return redirect('room_detail', room.id)
             else:
@@ -65,9 +68,14 @@ class RoomDetailView(LoginRequiredMixin,View):
         if request.user != room.host and request.user not in room.members.all():
             raise PermissionDenied("You are not authorized to view this room.")
 
+        join_requests = []
+        if request.user == room.host:
+            join_requests = JoinRequest.objects.filter(room=room, status='pending')
+
         context = {
             'pk': pk,
             'room': room,
+            'join_requests': join_requests
         }
 
         return render(request,'room_detail.html', context)
@@ -75,8 +83,28 @@ class RoomDetailView(LoginRequiredMixin,View):
     def post(self, request, pk):
         room = Room.objects.get(pk=pk)
 
-        username = request.POST.get('search_name')
+        if 'join_request_id' in request.POST and 'action' in request.POST:
+            join_request_id = request.POST.get('join_request_id')
+            action = request.POST.get('action')
 
+            try:
+                join_request = JoinRequest.objects.get(id=join_request_id, room=room)
+                if action == 'accept':
+                    room.members.add(join_request.user)
+                    join_request.delete()
+                    messages.success(request, f'Użytkownik {join_request.user.username} zostal dodany do pokoju.')
+                elif action == 'reject':
+                    join_request.delete()
+                    messages.info(request, f'Odrzucono prosbe uzytkownika {join_request.user.username}')
+            except JoinRequest.DoesNotExist:
+                messages.error(request, 'Prośba nie isnieje.')
+
+            return redirect('room_detail', pk=pk)
+
+
+
+
+        username = request.POST.get('search_name')
         if username:
             try:
                 user_to_add = User.objects.get(username=username)

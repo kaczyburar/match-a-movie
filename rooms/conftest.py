@@ -9,6 +9,7 @@ def user():
     lst = []
     lst.append(User.objects.create_user(username='test', password='polska123'))
     lst.append(User.objects.create_user(username='test2', password='djangomoc'))
+    lst.append(User.objects.create_user(username='test3', password='kokoszek'))
     return lst
 
 @pytest.fixture
