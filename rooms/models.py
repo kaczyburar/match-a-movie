@@ -6,3 +6,10 @@ class Room(models.Model):
     host = models.ForeignKey(User, on_delete=models.CASCADE, related_name='hosted_room')
     members = models.ManyToManyField(User, related_name='joined_room')
 
+class JoinRequest(models.Model):
+    room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='join_request')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_request')
+    status = models.CharField(max_length=10, default='pending')
+
+    class Meta:
+        unique_together = ('room', 'user')
