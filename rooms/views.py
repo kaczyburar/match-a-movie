@@ -1,3 +1,5 @@
+from pydoc import browse
+
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import render
 from django.views import View
@@ -150,5 +152,11 @@ def search_users(request, pk):
 
     return JsonResponse({'users': list(users)})
 
+
+class BrowseView(LoginRequiredMixin,View):
+    login_url = '/accounts/login/'
+    redirect_field_name = 'next'
+    def get(self, request):
+        return render(request, 'room_browse.html')
 
 

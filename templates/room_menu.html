@@ -11,5 +11,8 @@
     <h3>Dołącz do pokoju</h3>
     {{ join_room_form.name }}
     <button type="submit" name="join_room">Dołącz</button>
+    <a href="{% url 'browse' %}">
+        <button type="button" name="browse_rooms">Browse Rooms</button>
+    </a>
 </form>
 {% endblock %}
