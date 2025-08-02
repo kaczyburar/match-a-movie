@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect
 from accounts.forms import RegisterForm, LoginForm
 from django.views import View
+from django.contrib import messages
 
 
 class HomeView(View):
@@ -44,6 +45,9 @@ class LoginView(View):
             if user is not None:
                 login(request, user)
                 return redirect('home')
+            else:
+                messages.error(request, 'Username or password is incorrect')
+                return redirect('login')
         return render(request, 'nav_bar.html', {'form': form})
 
 class LogoutView(View):

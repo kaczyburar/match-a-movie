@@ -5,15 +5,17 @@
     {% endif %}
     <form method="POST">
     {% csrf_token %}
-    {{ form.as_p }}
+    {{ form }}
     <input type="submit">
+    {% if messages %}
+        {% for message in messages %}
+            {{ message }}
+        {% endfor %}
+    {% endif %}
     </form>
 
-    {% if user.is_authenticated %}
-    {% else %}
+    {% if not user.is_authenticated %}
         <p><a href="{% url 'register' %}"> Register</a></p>
     {% endif %}
-
-
 
 {% endblock %}

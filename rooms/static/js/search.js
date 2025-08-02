@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('search_name');
     const searchResults = document.getElementById('search-results');
-    const roomPk = document.getElementById('room-pk').value; // Ukryte pole z PK pokoju
+    const roomPk = document.getElementById('room-pk').value;
 
     searchInput.addEventListener('input', function() {
         const query = this.value.trim();
@@ -24,19 +24,17 @@ document.addEventListener('DOMContentLoaded', function() {
                         ).join('') +
                     '</ul>';
                 } else {
-                    searchResults.innerHTML = '<p>Nie znaleziono użytkowników</p>';
+                    searchResults.innerHTML = '<p>Users not found</p>';
                 }
 
                 searchResults.style.display = 'block';
             })
             .catch(error => {
-                console.error('Błąd AJAX:', error);
-                searchResults.innerHTML = '<p>Błąd wyszukiwania</p>';
+                searchResults.innerHTML = '<p>Search error</p>';
                 searchResults.style.display = 'block';
             });
     });
 
-    // Ukryj wyniki po kliknięciu poza pole
     document.addEventListener('click', function(e) {
         if (e.target !== searchInput) {
             searchResults.style.display = 'none';
@@ -48,5 +46,4 @@ function selectUser(username, userId) {
     document.getElementById('search_name').value = username;
     document.getElementById('search-results').style.display = 'none';
 
-    console.log('Wybrano użytkownika:', username, 'ID:', userId);
 }

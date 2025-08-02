@@ -7,9 +7,14 @@ class Room(models.Model):
     members = models.ManyToManyField(User, related_name='joined_room')
 
 class JoinRequest(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected'),
+    ]
     room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='join_request')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_request')
-    status = models.CharField(max_length=10, default='pending')
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
 
     class Meta:
         unique_together = ('room', 'user')

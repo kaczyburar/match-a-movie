@@ -135,7 +135,7 @@ def test_add_user_to_room_success(client, user, room):
     assert room.members.filter(username=user[1].username).exists()
     messages = list(get_messages(response.wsgi_request))
     assert len(messages) == 1
-    assert f'{user[1].username} został dodany do pokoju' in str(messages[0])
+    assert f'User {user[1].username} has been added to the room.' in str(messages[0])
 
 @pytest.mark.django_db
 def test_add_existing_member_warning(client, user, room):
@@ -145,7 +145,7 @@ def test_add_existing_member_warning(client, user, room):
 
     messages = list(get_messages(response.wsgi_request))
     assert len(messages) == 1
-    assert 'już jest w pokoju' in str(messages[0])
+    assert f'User {user[0].username} is already in the room.' in str(messages[0])
 
 @pytest.mark.django_db
 def test_add_nonexistent_user_error(client, user, room):
@@ -155,7 +155,7 @@ def test_add_nonexistent_user_error(client, user, room):
 
     messages = list(get_messages(response.wsgi_request))
     assert len(messages) == 1
-    assert 'nie istnieje' in str(messages[0])
+    assert f'User nonexistent_usr does not exist.' in str(messages[0])
 
 @pytest.mark.django_db
 def test_user_creates_join_request_when_not_member(client, user, room):
@@ -213,7 +213,7 @@ def test_accept_join_reqeust_success(client, user, room):
 
     messages = list(get_messages(response.wsgi_request))
     assert len(messages) == 1
-    assert f'{user[1].username} zostal dodany do pokoju' in str(messages[0])
+    assert f'User {user[1].username} has been added to the room.' in str(messages[0])
 
 @pytest.mark.django_db
 def test_reject_join_reqeust_success(client, user, room):

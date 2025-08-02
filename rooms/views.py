@@ -1,10 +1,7 @@
 from pydoc import browse
 
 from django.core.exceptions import PermissionDenied
-from django.shortcuts import render
 from django.views import View
-from django.views.generic import DetailView
-
 from rooms.forms import CreateRoomForm, JoinRoomForm
 from django.shortcuts import render, redirect
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -94,16 +91,14 @@ class RoomDetailView(LoginRequiredMixin,View):
                 if action == 'accept':
                     room.members.add(join_request.user)
                     join_request.delete()
-                    messages.success(request, f'Użytkownik {join_request.user.username} zostal dodany do pokoju.')
+                    messages.success(request, f'User {join_request.user.username} has been added to the room.')
                 elif action == 'reject':
                     join_request.delete()
-                    messages.info(request, f'Odrzucono prosbe uzytkownika {join_request.user.username}')
+                    messages.info(request, f'User request rejected {join_request.user.username}')
             except JoinRequest.DoesNotExist:
-                messages.error(request, 'Prośba nie isnieje.')
+                messages.error(request, 'Request does not exist.')
 
             return redirect('room_detail', pk=pk)
-
-
 
 
         username = request.POST.get('search_name')
@@ -113,14 +108,14 @@ class RoomDetailView(LoginRequiredMixin,View):
 
                 if user_to_add not in room.members.all():
                     room.members.add(user_to_add)
-                    messages.success(request, f'Użytkownik {user_to_add.username} został dodany do pokoju.')
+                    messages.success(request, f'User {user_to_add.username} has been added to the room.')
                 else:
-                    messages.warning(request, f'Użytkownik {user_to_add.username} już jest w pokoju.')
+                    messages.warning(request, f'User {user_to_add.username} is already in the room.')
 
             except User.DoesNotExist:
-                messages.error(request, f'Użytkownik {username} nie istnieje.')
+                messages.error(request, f'User {username} does not exist.')
         else:
-            messages.error(request, 'Nie wybrano użytkownika.')
+            messages.error(request, 'No user selected.')
 
         return redirect('room_detail', pk=pk)
 
@@ -158,5 +153,4 @@ class BrowseView(LoginRequiredMixin,View):
     redirect_field_name = 'next'
     def get(self, request):
         return render(request, 'room_browse.html')
-
 

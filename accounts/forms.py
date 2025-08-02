@@ -7,7 +7,10 @@ class RegisterForm(forms.ModelForm):
 
     def clean(self):
         data = super().clean()
-        if data['password'] != data['confirm_password']:
+        password = data.get('password')
+        confirm_password = data.get('confirm_password')
+
+        if password != confirm_password:
             self.add_error("confirm_password", "Passwords don't match")
         if len(data['password']) < 8:
             self.add_error("password", "Password must be at least 8 characters")
@@ -21,6 +24,8 @@ class RegisterForm(forms.ModelForm):
 class LoginForm(forms.Form):
     username = forms.CharField(widget=forms.TextInput())
     password = forms.CharField(widget=forms.PasswordInput)
+
+
 
 
 
