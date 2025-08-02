@@ -46,8 +46,8 @@ class LoginView(View):
                 login(request, user)
                 return redirect('home')
             else:
-                messages.error(request, 'Username or password is incorrect')
-                return redirect('login')
+                error_message = 'Username or password is incorrect'
+                return render(request, 'form.html', {'form': form, 'error_message': error_message})
         return render(request, 'nav_bar.html', {'form': form})
 
 class LogoutView(View):
