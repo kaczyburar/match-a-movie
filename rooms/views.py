@@ -69,7 +69,7 @@ class RoomDetailView(LoginRequiredMixin,View):
 
         join_requests = []
         if request.user == room.host:
-            join_requests = JoinRequest.objects.filter(room=room, status='pending')
+            join_requests = JoinRequest.objects.filter(room=room, status='pending', request_type='request')
 
         context = {
             'pk': pk,
@@ -105,10 +105,16 @@ class RoomDetailView(LoginRequiredMixin,View):
         if username:
             try:
                 user_to_add = User.objects.get(username=username)
-
-                if user_to_add not in room.members.all():
-                    room.members.add(user_to_add)
-                    messages.success(request, f'User {user_to_add.username} has been added to the room.')
+                has_pending_request = JoinRequest.objects.filter(room=room, user=user_to_add).exists()
+                print("lol")
+                if user_to_add not in room.members.all() and not has_pending_request:
+                        print("kurde")
+                        JoinRequest.objects.create(
+                            room=room,
+                            user=user_to_add,
+                            request_type='invitation'
+                        )
+                        messages.success(request, 'Invitation has been sent.')
                 else:
                     messages.warning(request, f'User {user_to_add.username} is already in the room.')
 
@@ -153,8 +159,37 @@ class BrowseView(LoginRequiredMixin,View):
     redirect_field_name = 'next'
     def get(self, request):
         user_rooms = Room.objects.filter(members=request.user)
+
+
+        join_requests = JoinRequest.objects.filter(user_id=request.user, status='pending', request_type='invitation')
+
+
+
         context = {
-            'user_rooms': user_rooms
+            'user_rooms': user_rooms,
+            'join_requests': join_requests
         }
         return render(request, 'room_browse.html', context)
+
+    def post(self, request):
+        if 'join_request_id' in request.POST and 'action' in request.POST:
+            join_request = request.POST.get('join_request_id')
+            room_id = request.POST.get('room_id')
+            room = Room.objects.get(pk=room_id)
+            action = request.POST.get('action')
+
+            try:
+                join_request = JoinRequest.objects.get(id=join_request, room=room_id)
+                if action == 'accept':
+                    room.members.add(join_request.user)
+                    join_request.delete()
+                    messages.success(request, f'User {join_request.user.username} has been added to the room.')
+                elif action == 'reject':
+                    join_request.delete()
+                    messages.info(request, f'User request rejected {join_request.user.username}')
+            except JoinRequest.DoesNotExist:
+                messages.error(request, 'Request does not exist.')
+
+            return redirect('browse')
+
 

@@ -15,4 +15,21 @@
     {% else %}
         <p>You are not a member of any room</p>
     {% endif %}
+    {% if join_requests %}
+        <div class="join-requests">
+            <h3>Join requests</h3>
+            {% for join_request in join_requests %}
+            <div class="request-items">
+                <span>{{ join_request.room.name }}</span>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="join_request_id" value="{{ join_request.id }}">
+                    <input type="hidden" name="room_id" value="{{ join_request.room_id }}">
+                    <button type="submit" name="action" value="accept">Accept</button>
+                    <button type="submit" name="action" value="reject">Reject</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+    {% endif %}
 {% endblock %}
