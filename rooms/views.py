@@ -152,5 +152,9 @@ class BrowseView(LoginRequiredMixin,View):
     login_url = '/accounts/login/'
     redirect_field_name = 'next'
     def get(self, request):
-        return render(request, 'room_browse.html')
+        user_rooms = Room.objects.filter(members=request.user)
+        context = {
+            'user_rooms': user_rooms
+        }
+        return render(request, 'room_browse.html', context)
 

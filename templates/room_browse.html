@@ -1,4 +1,18 @@
 {% extends 'nav_bar.html' %}
 {% block content %}
-    Przegladaj
+    <h2> Moje Pokoje</h2>
+    {% if user_rooms %}
+    <ul class="list-rooms">
+        {% for room in user_rooms %}
+            <li class="list-room-item">
+                {{ room.name }}
+                <a href="{% url 'room_detail' room.pk %}">
+                    Join
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+        <p>You are not a member of any room</p>
+    {% endif %}
 {% endblock %}

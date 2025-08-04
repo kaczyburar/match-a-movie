@@ -1,12 +1,13 @@
 {% extends 'nav_bar.html' %}
 {% load static %}
 {% block content %}
-
+<h2> {{ room.name }}</h2>
+    
 <form method="post">
     {% csrf_token %}
     <input type="hidden" id="room-pk" value="{{ room.pk }}">
     <input type='text' name='search_name' id='search_name' placeholder='Search friend..'>
-    <button type="submit">Dodaj użytkownika</button>
+    <button type="submit">Add friend</button>
 </form>
 
 <div id="search-results" style="display: none;"></div>
@@ -21,8 +22,8 @@
             <form method="post">
                 {% csrf_token %}
                 <input type="hidden" name="join_request_id" value="{{ join_request.id }}">
-                <button type="submit" name="action" value="accept">Akceptuj</button>
-                <button type="submit" name="action" value="reject">Odrzuć</button>
+                <button type="submit" name="action" value="accept">Accept</button>
+                <button type="submit" name="action" value="reject">Reject</button>
             </form>
         </div>
         {% endfor %}
