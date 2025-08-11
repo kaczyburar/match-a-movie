@@ -1,16 +1,16 @@
 from pydoc import browse
-
+from django.db.models import Count, Avg, Q
 from django.core.exceptions import PermissionDenied
 from django.views import View
 from rooms.forms import CreateRoomForm, JoinRoomForm
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 
 from rooms.models import Room, JoinRequest
+from movies.models import Movie, MovieRating
 from django.contrib.auth.models import User
 from django.http import JsonResponse
-
 class RoomView(LoginRequiredMixin, View):
     login_url = '/accounts/login/'
     redirect_field_name = 'next'
@@ -59,11 +59,12 @@ class RoomView(LoginRequiredMixin, View):
         return self.get(request)
 
 
-class RoomDetailView(LoginRequiredMixin,View):
+class RoomDetailView(LoginRequiredMixin, View):
     login_url = '/accounts/login/'
     redirect_field_name = 'next'
+
     def get(self, request, pk):
-        room = Room.objects.get(pk=pk)
+        room = get_object_or_404(Room, pk=pk)
         if request.user != room.host and request.user not in room.members.all():
             raise PermissionDenied("You are not authorized to view this room.")
 
@@ -71,13 +72,50 @@ class RoomDetailView(LoginRequiredMixin,View):
         if request.user == room.host:
             join_requests = JoinRequest.objects.filter(room=room, status='pending', request_type='request')
 
+        room_members = room.members.all()
+
+        top_movies = Movie.objects.filter(
+            ratings__user__in=room_members
+        ).annotate(
+            room_avg_rating=Avg('ratings__rating', filter=Q(ratings__user__in=room_members)),
+            room_ratings_count=Count('ratings', filter=Q(ratings__user__in=room_members))
+        ).filter(
+            room_ratings_count__gt=0
+        ).order_by(
+            '-room_avg_rating',
+            '-room_ratings_count'
+        )[:10]
+
+        movies_with_details = []
+        for movie in top_movies:
+            room_ratings = MovieRating.objects.filter(
+                movie=movie,
+                user__in=room_members
+            )
+
+            rating_breakdown = {
+                'dislike': room_ratings.filter(rating='0').count(),
+                'like': room_ratings.filter(rating='1').count(),
+                'love': room_ratings.filter(rating='2').count(),
+                'watched': room_ratings.filter(rating='3').count(),
+            }
+
+            movies_with_details.append({
+                'movie': movie,
+                'room_avg_rating': movie.room_avg_rating,
+                'room_ratings_count': movie.room_ratings_count,
+                'rating_breakdown': rating_breakdown,
+            })
+
         context = {
             'pk': pk,
             'room': room,
-            'join_requests': join_requests
+            'join_requests': join_requests,
+            'movies_with_details': movies_with_details,
+            'room_members_count': room_members.count(),
         }
 
-        return render(request,'room_detail.html', context)
+        return render(request, 'room_detail.html', context)
 
     def post(self, request, pk):
         room = Room.objects.get(pk=pk)
@@ -100,21 +138,19 @@ class RoomDetailView(LoginRequiredMixin,View):
 
             return redirect('room_detail', pk=pk)
 
-
         username = request.POST.get('search_name')
         if username:
             try:
                 user_to_add = User.objects.get(username=username)
                 has_pending_request = JoinRequest.objects.filter(room=room, user=user_to_add).exists()
-                print("lol")
+
                 if user_to_add not in room.members.all() and not has_pending_request:
-                        print("kurde")
-                        JoinRequest.objects.create(
-                            room=room,
-                            user=user_to_add,
-                            request_type='invitation'
-                        )
-                        messages.success(request, 'Invitation has been sent.')
+                    JoinRequest.objects.create(
+                        room=room,
+                        user=user_to_add,
+                        request_type='invitation'
+                    )
+                    messages.success(request, 'Invitation has been sent.')
                 else:
                     messages.warning(request, f'User {user_to_add.username} is already in the room.')
 
