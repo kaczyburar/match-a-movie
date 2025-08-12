@@ -1,13 +1,23 @@
+{% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
     <title>Match a movie</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
 </head>
 <body>
-{% include 'links.html' %}
-
-{% block content %}
-{% endblock %}
+    <div class="navbar">
+        <div class="nav-container">
+            <a href="{% url 'home' %}" class="nav-link">Home</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'browse' %}" class="nav-link">Your Rooms</a>
+                <a href="{% url 'rate_movie' %}" class="nav-link">Rate Movies</a>
+                <a href="{% url 'logout' %}" class="nav-link">Logout</a>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% block content %}
+    {% endblock %}
 </body>
 </html>

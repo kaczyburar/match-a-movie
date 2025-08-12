@@ -11,6 +11,8 @@ from rooms.models import Room, JoinRequest
 from movies.models import Movie, MovieRating
 from django.contrib.auth.models import User
 from django.http import JsonResponse
+
+
 class RoomView(LoginRequiredMixin, View):
     login_url = '/accounts/login/'
     redirect_field_name = 'next'
@@ -22,6 +24,7 @@ class RoomView(LoginRequiredMixin, View):
             'create_room_form': create_room_form,
             'join_room_form': join_room_form
         })
+
     def post(self, request):
         if 'create_room' in request.POST:
             form = CreateRoomForm(request.POST)
@@ -37,24 +40,30 @@ class RoomView(LoginRequiredMixin, View):
                     'join_room_form': JoinRoomForm()
                 })
 
-
         elif 'join_room' in request.POST:
             form = JoinRoomForm(request.POST)
             if form.is_valid():
                 room_name = form.cleaned_data['name']
-                room = Room.objects.get(name=room_name)
-                if request.user != room.host and request.user not in room.members.all():
-                    JoinRequest.objects.create(
-                        room = room,
-                        user=request.user
-                    )
-                else:
-                    return redirect('room_detail', room.id)
-            else:
-                return render(request, 'room_menu.html', {
-                    'create_room_form': CreateRoomForm(),
-                    'join_room_form': form
-                })
+                try:
+                    room = Room.objects.get(name=room_name)
+                    if request.user == room.host:
+                        form.add_error('name', 'You are the host of this room')
+                    elif request.user in room.members.all():
+                        form.add_error('name', 'You are already a member of this room')
+                    else:
+                        existing_request = JoinRequest.objects.filter(room=room, user=request.user).first()
+                        if existing_request:
+                            form.add_error('name', 'Join request already sent')
+                        else:
+                            JoinRequest.objects.create(room=room, user=request.user)
+                            form.add_error('name', 'Join request sent to host')
+                except Room.DoesNotExist:
+                    form.add_error('name', 'This room does not exist')
+
+            return render(request, 'room_menu.html', {
+                'create_room_form': CreateRoomForm(),
+                'join_room_form': form
+            })
 
         return self.get(request)
 
@@ -163,7 +172,6 @@ class RoomDetailView(LoginRequiredMixin, View):
 
 
 def search_users(request, pk):
-
     if not request.user.is_authenticated:
         return JsonResponse({'error': 'Unauthorized'}, status=401)
 
@@ -174,12 +182,10 @@ def search_users(request, pk):
     except Room.DoesNotExist:
         return JsonResponse({'error': 'Room not found'}, status=404)
 
-
     query = request.GET.get('q', '').strip()
 
     if len(query) < 3:
         return JsonResponse({'users': []})
-
 
     users = User.objects.exclude(
         id__in=room.members.all().values_list('id', flat=True)
@@ -190,16 +196,14 @@ def search_users(request, pk):
     return JsonResponse({'users': list(users)})
 
 
-class BrowseView(LoginRequiredMixin,View):
+class BrowseView(LoginRequiredMixin, View):
     login_url = '/accounts/login/'
     redirect_field_name = 'next'
+
     def get(self, request):
         user_rooms = Room.objects.filter(members=request.user)
 
-
         join_requests = JoinRequest.objects.filter(user_id=request.user, status='pending', request_type='invitation')
-
-
 
         context = {
             'user_rooms': user_rooms,
@@ -227,5 +231,3 @@ class BrowseView(LoginRequiredMixin,View):
                 messages.error(request, 'Request does not exist.')
 
             return redirect('browse')
-
-

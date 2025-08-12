@@ -1,18 +1,46 @@
 {% extends 'nav_bar.html' %}
+{% load static %}
 {% block content %}
-<form method="post">
-    {% csrf_token %}
-    <h3>Utwórz pokój</h3>
-    {{ create_room_form.name }}
-    <button type="submit" name="create_room">Utwórz</button>
-</form>
-<form method="post">
-    {% csrf_token %}
-    <h3>Dołącz do pokoju</h3>
-    {{ join_room_form.name }}
-    <button type="submit" name="join_room">Dołącz</button>
-    <a href="{% url 'browse' %}">
-        <button type="button" name="browse_rooms">Browse Rooms</button>
-    </a>
-</form>
+<link rel="stylesheet" href="{% static 'css/main.css' %}">
+
+<div class="header">
+    Match a Movie
+</div>
+
+<div class="container">
+    <div class="room-container">
+        <div class="room-box">
+            <form method="post">
+                {% csrf_token %}
+                <h3>Create Room</h3>
+                {{ create_room_form.name }}
+                {% if create_room_form.name.errors %}
+                    <div class="error">
+                        {{ create_room_form.name.errors.0 }}
+                    </div>
+                {% endif %}
+                <input type="submit" name="create_room" value="Create">
+            </form>
+        </div>
+        
+        <div class="room-box">
+            <form method="post">
+                {% csrf_token %}
+                <h3>Join Room</h3>
+                {{ join_room_form.name }}
+                {% if join_room_form.name.errors %}
+                    {% for error in join_room_form.name.errors %}
+                        {% if error == "Join request sent to host" or error == "Join request already sent"%}
+                            <div class="success">{{ error }}</div>
+                        {% else %}
+                            <div class="error">{{ error }}</div>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+                <input type="submit" name="join_room" value="Join">
+                <a href="{% url 'browse' %}" class="browse-btn">Browse Rooms</a>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}

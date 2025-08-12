@@ -42,7 +42,7 @@ def test_room_menu_view_creation_room_unsuccessfully(room, user):
 
     assert response.status_code == 200
     assert 'name' in form.errors
-    assert 'This name is already taken' in form.errors['name']
+    assert 'This room name is already taken' in form.errors['name']
 
 @pytest.mark.django_db
 def test_user_can_access_room_detail_if_member_or_host(room, user):
@@ -66,11 +66,12 @@ def test_room_menu_view_join_room_successfully_if_member_or_host(room, user):
     client.force_login(user[0])
     url = reverse('room_menu')
     data = {
-        'name': 'Seans',
+        'name': room.name,
         'join_room': ''
     }
     response = client.post(url, data)
-    assert response.status_code == 302
+    assert response.status_code == 200
+    assert 'You are already a member of this room' in response.content.decode() or 'You are the host of this room' in response.content.decode()
 
 @pytest.mark.django_db
 def test_room_menu_view_join_room_unsuccessfully_room_not_exists(user):
@@ -282,11 +283,12 @@ def test_duplicate_join_request_prevention(client, user, room):
     client.force_login(user[1])
     url = reverse('room_menu')
     data = {
-        'name': 'Seans',
+        'name': room.name,
         'join_room': ''
     }
-    with pytest.raises(Exception):
-        client.post(url, data)
+    response = client.post(url, data)
+    assert response.status_code == 200
+    assert 'Join request already sent' in response.content.decode()
 
 
 @pytest.mark.django_db

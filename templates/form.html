@@ -1,19 +1,43 @@
-{% extends 'nav_bar.html' %}
-{% block content %}
-    {% if error %}
-        {{ error }}
-    {% endif %}
-    <form method="POST">
-    {% csrf_token %}
-    {{ form }}
-    <input type="submit">
-    {% if error_message %}
-        {{ error_message }}
-    {% endif %}
-    </form>
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Match a movie</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+<body>
+    <div class="header">
+        Match a Movie
+    </div>
 
-    {% if not user.is_authenticated %}
-        <p><a href="{% url 'register' %}"> Register</a></p>
-    {% endif %}
+    <div class="container">
+        <div class="login-box">
+            {% if error_message %}
+                <div class="error">{{ error_message }}</div>
+            {% endif %}
 
-{% endblock %}
+            {% if error %}
+                <div class="error">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST">
+                {% csrf_token %}
+                {{ form }}
+                {% if 'register' in request.resolver_match.url_name %}
+                    <input type="submit" value="Register">
+                {% else %}
+                    <input type="submit" value="Login">
+                {% endif %}
+            </form>
+
+            {% if not user.is_authenticated %}
+                {% if 'register' in request.resolver_match.url_name %}
+                    <p><a href="{% url 'login' %}" class="register-btn">Login</a></p>
+                {% else %}
+                    <p><a href="{% url 'register' %}" class="register-btn">Register</a></p>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
