@@ -203,31 +203,49 @@ class BrowseView(LoginRequiredMixin, View):
     def get(self, request):
         user_rooms = Room.objects.filter(members=request.user)
 
-        join_requests = JoinRequest.objects.filter(user_id=request.user, status='pending', request_type='invitation')
+        join_requests = JoinRequest.objects.filter(
+            user_id=request.user,
+            status='pending',
+            request_type='invitation'
+        )
+
+        sent_requests = JoinRequest.objects.filter(
+            user_id=request.user,
+            status='pending',
+            request_type='request'
+        )
 
         context = {
             'user_rooms': user_rooms,
-            'join_requests': join_requests
+            'join_requests': join_requests,
+            'sent_requests': sent_requests,
         }
         return render(request, 'room_browse.html', context)
 
     def post(self, request):
         if 'join_request_id' in request.POST and 'action' in request.POST:
-            join_request = request.POST.get('join_request_id')
+            join_request_id = request.POST.get('join_request_id')
             room_id = request.POST.get('room_id')
-            room = Room.objects.get(pk=room_id)
             action = request.POST.get('action')
 
             try:
-                join_request = JoinRequest.objects.get(id=join_request, room=room_id)
+                join_request = JoinRequest.objects.get(id=join_request_id, room=room_id)
+                room = Room.objects.get(pk=room_id)
+
                 if action == 'accept':
                     room.members.add(join_request.user)
                     join_request.delete()
-                    messages.success(request, f'User {join_request.user.username} has been added to the room.')
+                    messages.success(request, f'You have joined the room {room.name}.')
                 elif action == 'reject':
                     join_request.delete()
-                    messages.info(request, f'User request rejected {join_request.user.username}')
+                    messages.info(request, f'You have rejected the invitation to {room.name}.')
+                elif action == 'cancel':
+                    join_request.delete()
+                    messages.info(request, f'You have cancelled your request to join {room.name}.')
+
             except JoinRequest.DoesNotExist:
                 messages.error(request, 'Request does not exist.')
+            except Room.DoesNotExist:
+                messages.error(request, 'Room does not exist.')
 
-            return redirect('browse')
+        return redirect('browse')

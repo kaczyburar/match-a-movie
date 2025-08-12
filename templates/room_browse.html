@@ -1,35 +1,66 @@
 {% extends 'nav_bar.html' %}
+
 {% block content %}
-    <h2> Moje Pokoje</h2>
+<div class="browse-container">
+    <h2 class="page-title">My Rooms</h2>
+
     {% if user_rooms %}
-    <ul class="list-rooms">
-        {% for room in user_rooms %}
-            <li class="list-room-item">
-                {{ room.name }}
-                <a href="{% url 'room_detail' room.pk %}">
-                    Join
-                </a>
-            </li>
-        {% endfor %}
-    </ul>
+        <div class="rooms-grid">
+            {% for room in user_rooms %}
+                <div class="room-card">
+                    <div class="room-name">{{ room.name }}</div>
+                    <div class="room-actions">
+                        <a href="{% url 'room_detail' room.pk %}" class="btn btn-enter">Enter</a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
     {% else %}
-        <p>You are not a member of any room</p>
+        <div class="no-rooms">
+            <p>You are not a member of any room</p>
+        </div>
     {% endif %}
+
     {% if join_requests %}
-        <div class="join-requests">
-            <h3>Join requests</h3>
+        <h3 class="section-title">Pending Invitations</h3>
+        <div class="rooms-grid">
             {% for join_request in join_requests %}
-            <div class="request-items">
-                <span>{{ join_request.room.name }}</span>
-                <form method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="join_request_id" value="{{ join_request.id }}">
-                    <input type="hidden" name="room_id" value="{{ join_request.room_id }}">
-                    <button type="submit" name="action" value="accept">Accept</button>
-                    <button type="submit" name="action" value="reject">Reject</button>
-                </form>
-            </div>
+                <div class="room-card">
+                    <div class="room-name">{{ join_request.room.name }}</div>
+                    <div class="room-actions">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="join_request_id" value="{{ join_request.id }}">
+                            <input type="hidden" name="room_id" value="{{ join_request.room.id }}">
+                            <div class="request-actions">
+                                <button type="submit" name="action" value="accept" class="btn btn-accept">Accept</button>
+                                <button type="submit" name="action" value="reject" class="btn btn-reject">Reject</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             {% endfor %}
         </div>
     {% endif %}
+
+    {% if sent_requests %}
+        <h3 class="section-title">Sent Requests</h3>
+        <div class="rooms-grid">
+            {% for sent_request in sent_requests %}
+                <div class="room-card">
+                    <div class="room-name">{{ sent_request.room.name }}</div>
+                    <div class="room-status">Waiting for approval</div>
+                    <div class="room-actions">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="join_request_id" value="{{ sent_request.id }}">
+                            <input type="hidden" name="room_id" value="{{ sent_request.room.id }}">
+                            <button type="submit" name="action" value="cancel" class="btn btn-cancel">Cancel Request</button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
 {% endblock %}

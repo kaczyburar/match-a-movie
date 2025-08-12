@@ -1,9 +1,8 @@
-from urllib import request
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect
 from accounts.forms import RegisterForm, LoginForm
 from django.views import View
-from django.contrib import messages
+
 
 
 class HomeView(View):
