@@ -2,134 +2,167 @@
 {% load static %}
 
 {% block content %}
-<h2>{{ room.name }}</h2>
+<div class="room-detail-container">
 
-<form method="post">
-    {% csrf_token %}
-    <input type="hidden" id="room-pk" value="{{ room.pk }}">
-    <input type='text' name='search_name' id='search_name' placeholder='Search friend..'>
-    <button type="submit">Add friend</button>
-</form>
-
-<div id="search-results" style="display: none;"></div>
-<script src="{% static 'js/search.js' %}"></script>
-
-{% if join_requests %}
-<div class="join-requests">
-    <h3>Join requests</h3>
-    {% for join_request in join_requests %}
-    <div class="request-items">
-        <span>{{ join_request.user.username }}</span>
-        <form method="post">
-            {% csrf_token %}
-            <input type="hidden" name="join_request_id" value="{{ join_request.id }}">
-            <button type="submit" name="action" value="accept">Accept</button>
-            <button type="submit" name="action" value="reject">Reject</button>
-        </form>
+    <div class="room-header">
+        <h1 class="room-title">{{ room.name }}</h1>
+        <button class="btn btn-friends" onclick="toggleFriendsSection()">
+            <span class="emoji">👥</span>
+            Friends
+        </button>
     </div>
-    {% endfor %}
-</div>
-{% endif %}
 
-<div class="room-members">
-    <ul>
-        <li>{{ room.host.username }} (Host)</li>
-        {% for member in room.members.all %}
-            {% if member != room.host %}
-                <li>{{ member.username }}</li>
-            {% endif %}
-        {% endfor %}
-    </ul>
-</div>
 
-<!-- Sekcja z najlepiej ocenianymi filmami -->
-<div class="top-movies-section" style="margin-top: 40px;">
-    <h3>📽️ Najlepiej oceniane filmy w pokoju</h3>
-    <p style="color: #666; font-size: 14px;">Na podstawie ocen {{ room_members_count }} członków</p>
-    
-    {% if movies_with_details %}
-        <div class="movies-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-top: 20px;">
-            {% for movie_data in movies_with_details %}
-            <div class="movie-card" style="border: 1px solid #ddd; border-radius: 8px; overflow: hidden; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                <div style="display: flex; height: 200px;">
-                    <div style="flex: 0 0 130px;">
-                        <img src="{{ movie_data.movie.poster_url }}" 
-                             alt="{{ movie_data.movie.title }}"
-                             style="width: 100%; height: 100%; object-fit: cover;">
+    <div class="friends-section" id="friends-section" style="display: none;">
+        <div class="friends-container">
+            {% if request.user == room.host %}
+            <div class="invite-section">
+                <h3>Invite Friends</h3>
+                <form method="post" class="invite-form">
+                    {% csrf_token %}
+                    <input type="hidden" id="room-pk" value="{{ room.pk }}">
+                    <div class="search-container">
+                        <input type='text' name='search_name' id='search_name' placeholder='Search friend...' class="search-input">
+                        <button type="submit" class="btn btn-invite">Add friend</button>
                     </div>
-                    <div style="flex: 1; padding: 15px; display: flex; flex-direction: column;">
-                        <h4 style="margin: 0 0 10px 0; font-size: 16px; font-weight: bold;">
-                            {{ movie_data.movie.title }}
-                        </h4>
-                        <p style="margin: 0 0 15px 0; font-size: 13px; color: #666; line-height: 1.4; flex: 1;">
-                            {{ movie_data.movie.description|truncatechars:120 }}
-                        </p>
-                        
-                        <!-- Średnia ocena w pokoju -->
-                        <div style="margin-bottom: 8px;">
-                            <strong style="font-size: 14px;">Średnia ocena: 
-                                <span style="background: #007bff; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px;">
-                                    {{ movie_data.room_avg_rating|floatformat:1 }}/3.0
-                                </span>
-                            </strong>
+                    <div id="search-results" class="search-results"></div>
+                </form>
+            </div>
+            {% endif %}
+
+            {% if request.user == room.host and join_requests %}
+            <div class="join-requests-section">
+                <h3>Join Requests</h3>
+                <div class="requests-list">
+                    {% for join_request in join_requests %}
+                    <div class="request-item">
+                        <span class="username">{{ join_request.user.username }}</span>
+                        <form method="post" class="request-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="join_request_id" value="{{ join_request.id }}">
+                            <div class="request-actions">
+                                <button type="submit" name="action" value="accept" class="btn btn-accept">Accept</button>
+                                <button type="submit" name="action" value="reject" class="btn btn-reject">Reject</button>
+                            </div>
+                        </form>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+
+            <div class="members-section">
+                <h3>Room Members ({{ room_members_count }})</h3>
+                <div class="members-list">
+                    <div class="member-item host">
+                        <span class="member-name">{{ room.host.username }}</span>
+                        <span class="member-role">Host</span>
+                    </div>
+                    {% for member in room.members.all %}
+                        {% if member != room.host %}
+                        <div class="member-item">
+                            <span class="member-name">{{ member.username }}</span>
                         </div>
-                        
-                        <!-- Liczba ocen -->
-                        <div style="margin-bottom: 10px;">
-                            <small style="color: #666; font-size: 12px;">
-                                Ocenione przez {{ movie_data.room_ratings_count }} członków
-                            </small>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="top-movies-section">
+        <h2 class="section-title">📽️ Top Rated Movies in Room</h2>
+        <p class="section-subtitle">Based on ratings from {{ room_members_count }} members</p>
+
+        {% if movies_with_details %}
+            <div class="movies-grid">
+                {% for movie_data in movies_with_details %}
+                <div class="movie-card">
+                    <div class="movie-content">
+                        <div class="movie-poster">
+                            {% if movie_data.movie.poster_url %}
+                                <img src="{{ movie_data.movie.poster_url }}"
+                                     alt="{{ movie_data.movie.title }}"
+                                     class="poster-image">
+                            {% else %}
+                                <div class="poster-placeholder">
+                                    <span>🎬</span>
+                                    <p>No poster</p>
+                                </div>
+                            {% endif %}
                         </div>
-                        
-                        <!-- Breakdown ocen -->
-                        <div>
-                            <small style="color: #666; font-size: 11px; display: block; margin-bottom: 4px;">Szczegóły ocen:</small>
-                            <div style="display: flex; flex-wrap: wrap; gap: 4px;">
-                                {% if movie_data.rating_breakdown.love > 0 %}
-                                    <span style="background: #dc3545; color: white; padding: 1px 6px; border-radius: 3px; font-size: 11px;">
-                                        ❤️ {{ movie_data.rating_breakdown.love }}
-                                    </span>
-                                {% endif %}
-                                {% if movie_data.rating_breakdown.like > 0 %}
-                                    <span style="background: #28a745; color: white; padding: 1px 6px; border-radius: 3px; font-size: 11px;">
-                                        👍 {{ movie_data.rating_breakdown.like }}
-                                    </span>
-                                {% endif %}
-                                {% if movie_data.rating_breakdown.watched > 0 %}
-                                    <span style="background: #17a2b8; color: white; padding: 1px 6px; border-radius: 3px; font-size: 11px;">
-                                        👁️ {{ movie_data.rating_breakdown.watched }}
-                                    </span>
-                                {% endif %}
-                                {% if movie_data.rating_breakdown.dislike > 0 %}
-                                    <span style="background: #6c757d; color: white; padding: 1px 6px; border-radius: 3px; font-size: 11px;">
-                                        👎 {{ movie_data.rating_breakdown.dislike }}
-                                    </span>
-                                {% endif %}
+                        <div class="movie-info">
+                            <h4 class="movie-name">{{ movie_data.movie.title }}</h4>
+                            <p class="movie-desc">{{ movie_data.movie.description|truncatechars:120 }}</p>
+
+                            <!-- Room Average Rating -->
+                            <div class="rating-info">
+                                <div class="average-rating">
+                                    <span class="rating-label">Room Average:</span>
+                                    <span class="rating-score">{{ movie_data.room_avg_rating|floatformat:1 }}/3.0</span>
+                                </div>
+                                <div class="rating-count">
+                                    Rated by {{ movie_data.room_ratings_count }} members
+                                </div>
+                            </div>
+
+                            <!-- Rating Breakdown -->
+                            <div class="rating-breakdown">
+                                <span class="breakdown-label">Rating Details:</span>
+                                <div class="breakdown-tags">
+                                    {% if movie_data.rating_breakdown.love > 0 %}
+                                        <span class="rating-tag love">❤️ {{ movie_data.rating_breakdown.love }}</span>
+                                    {% endif %}
+                                    {% if movie_data.rating_breakdown.like > 0 %}
+                                        <span class="rating-tag like">👍 {{ movie_data.rating_breakdown.like }}</span>
+                                    {% endif %}
+                                    {% if movie_data.rating_breakdown.watched > 0 %}
+                                        <span class="rating-tag watched">👁️ {{ movie_data.rating_breakdown.watched }}</span>
+                                    {% endif %}
+                                    {% if movie_data.rating_breakdown.dislike > 0 %}
+                                        <span class="rating-tag dislike">👎 {{ movie_data.rating_breakdown.dislike }}</span>
+                                    {% endif %}
+                                </div>
                             </div>
                         </div>
                     </div>
+
+                    <div class="movie-footer">
+                        {% if movie_data.movie.trailer_url %}
+                            <a href="{{ movie_data.movie.trailer_url }}"
+                               target="_blank"
+                               class="trailer-link">
+                                🎬 Watch Trailer
+                            </a>
+                        {% endif %}
+                        <span class="global-rating">
+                            Global: {{ movie_data.movie.average_rating|floatformat:1 }}
+                        </span>
+                    </div>
                 </div>
-                
-                <!-- Footer z linkiem do zwiastuna -->
-                <div style="padding: 10px 15px; background: #f8f9fa; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
-                    <a href="{{ movie_data.movie.trailer_url }}" 
-                       target="_blank"
-                       style="color: #007bff; text-decoration: none; font-size: 13px; font-weight: 500;">
-                        🎬 Zwiastun
-                    </a>
-                    <small style="color: #666; font-size: 11px;">
-                        Ogólna ocena: {{ movie_data.movie.average_rating }}
-                    </small>
-                </div>
+                {% endfor %}
             </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <div style="background: #d1ecf1; border: 1px solid #bee5eb; border-radius: 4px; padding: 20px; margin-top: 20px; text-align: center;">
-            <h5 style="margin: 0 0 10px 0; color: #0c5460;">Brak ocenionych filmów</h5>
-            <p style="margin: 0; color: #0c5460;">Członkowie tego pokoju jeszcze nie ocenili żadnych filmów.</p>
-        </div>
-    {% endif %}
+        {% else %}
+            <div class="no-movies">
+                <h3>No Rated Movies</h3>
+                <p>Room members haven't rated any movies yet.</p>
+            </div>
+        {% endif %}
+    </div>
 </div>
 
+<script src="{% static 'js/search.js' %}"></script>
+<script>
+function toggleFriendsSection() {
+    const friendsSection = document.getElementById('friends-section');
+    const isVisible = friendsSection.style.display !== 'none';
+
+    if (isVisible) {
+        friendsSection.style.display = 'none';
+    } else {
+        friendsSection.style.display = 'block';
+    }
+}
+</script>
 {% endblock %}

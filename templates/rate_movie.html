@@ -1,98 +1,114 @@
 {% extends 'nav_bar.html' %}
+{% load static %}
 {% block content %}
-
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Rate Movie</title>
-</head>
-<body>
-    <h1>Rate Movie</h1>
-
-    {% if messages %}
-        {% for message in messages %}
-            <div>{{ message }}</div>
-        {% endfor %}
-    {% endif %}
-
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+<div class="movie-rating-container">
     {% if all_rated %}
-        <h2>Congratulations!</h2>
-        <p>You have rated all available movies.</p>
-
+        <div class="all-rated-section">
+            <div class="congratulations-card">
+                <h2>🎉 Congratulations!</h2>
+                <p>You have rated all available movies.</p>
+                <a href="{% url 'browse' %}" class="btn btn-browse">Browse Your Rooms</a>
+            </div>
+        </div>
     {% else %}
-        <div>
-            <h2>{{ movie.title }}</h2>
-
-            <!-- Movie rating statistics -->
-            {% if movie.total_ratings > 0 %}
-                <div>
-                    <p><strong>Average Rating:</strong> {{ movie.average_rating }}/3.0 ({{ movie.total_ratings }} rating{{ movie.total_ratings|pluralize }})</p>
-                </div>
-            {% else %}
-                <div>
-                    <p><strong>Average Rating:</strong> No ratings yet</p>
-                </div>
+        <div class="movie-header">
+            <h1 class="movie-title">{{ movie.title }}</h1>
+            {% if movie.year %}
+                <span class="movie-year">({{ movie.year }})</span>
             {% endif %}
+        </div>
+        
+        <div class="movie-content">
+            <div class="movie-poster-section">
+                {% if movie.poster_url %}
+                    <div class="poster-container">
+                        <img src="{{ movie.poster_url }}" alt="Poster {{ movie.title }}" class="movie-poster">
+                    </div>
+                {% else %}
+                    <div class="poster-placeholder">
+                        <span>🎬</span>
+                        <p>No poster available</p>
+                    </div>
+                {% endif %}
+            </div>
 
-            <!-- Movie poster -->
-            {% if movie.poster_url %}
-                <div>
-                    <img src="{{ movie.poster_url }}" alt="Poster {{ movie.title }}" width="300">
+        
+            <div class="movie-info-section">
+                <div class="movie-background-overlay">
+                    <div class="rating-stats">
+                        {% if movie.total_ratings > 0 %}
+                            <div class="average-score">
+                                <span class="score-number">{{ movie.average_rating }}</span>
+                                <span class="score-max">/3.0</span>
+                            </div>
+                            <div class="rating-count">{{ movie.total_ratings }} rating{{ movie.total_ratings|pluralize }}</div>
+                        {% else %}
+                            <div class="average-score">
+                                <span class="score-number">—</span>
+                            </div>
+                            <div class="rating-count">No ratings yet</div>
+                        {% endif %}
+                    </div>
+                
+                    {% if movie.description %}
+                        <div class="movie-description">
+                            <h3>Description</h3>
+                            <p>{{ movie.description }}</p>
+                        </div>
+                    {% endif %}
+                
+                    {% if youtube_embed_url %}
+                        <div class="trailer-section">
+                            <h3>Trailer</h3>
+                            <div class="trailer-container">
+                                <iframe src="{{ youtube_embed_url }}"
+                                        frameborder="0"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowfullscreen>
+                                </iframe>
+                            </div>
+                        </div>
+                    {% elif movie.trailer_url %}
+                        <div class="trailer-section">
+                            <h3>Trailer</h3>
+                            <a href="{{ movie.trailer_url }}" target="_blank" class="trailer-link">
+                                ▶️ Watch trailer
+                            </a>
+                        </div>
+                    {% endif %}
+                
+                    <div class="rating-section">
+                        <h3>What's your vibe?</h3>
+                        <form method="post" class="rating-form">
+                            {% csrf_token %}
+                            
+                            <div class="rating-buttons">
+                                <button type="submit" name="rating" value="0" class="rating-btn dislike-btn">
+                                    <span class="emoji">👎</span>
+                                    <span class="text">Don't like it</span>
+                                </button>
+
+                                <button type="submit" name="rating" value="1" class="rating-btn like-btn">
+                                    <span class="emoji">👍</span>
+                                    <span class="text">Like it</span>
+                                </button>
+
+                                <button type="submit" name="rating" value="2" class="rating-btn love-btn">
+                                    <span class="emoji">❤️</span>
+                                    <span class="text">Love it</span>
+                                </button>
+
+                                <button type="submit" name="rating" value="watched" class="rating-btn watched-btn">
+                                    <span class="emoji">✅</span>
+                                    <span class="text">Already watched</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-            {% endif %}
-
-            <!-- Movie description -->
-            {% if movie.description %}
-                <div>
-                    <h3>Description:</h3>
-                    <p>{{ movie.description }}</p>
-                </div>
-            {% endif %}
-
-            <!-- YouTube trailer -->
-            {% if youtube_embed_url %}
-                <div>
-                    <h3>Trailer:</h3>
-                    <iframe width="560" height="315"
-                            src="{{ youtube_embed_url }}"
-                            frameborder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowfullscreen>
-                    </iframe>
-                </div>
-            {% elif movie.trailer_url %}
-                <div>
-                    <h3>Trailer:</h3>
-                    <a href="{{ movie.trailer_url }}" target="_blank">Watch trailer</a>
-                </div>
-            {% endif %}
-
-            <!-- Rating buttons -->
-            <div>
-                <h3>Rate this movie:</h3>
-                <form method="post">
-                    {% csrf_token %}
-
-                    <button type="submit" name="rating" value="0">
-                        👎 Don't like it
-                    </button>
-
-                    <button type="submit" name="rating" value="1">
-                        👍 Like it
-                    </button>
-
-                    <button type="submit" name="rating" value="2">
-                        ❤️ Love it
-                    </button>
-
-                    <button type="submit" name="rating" value="3">
-                        ✅ Already watched
-                    </button>
-                </form>
             </div>
         </div>
     {% endif %}
-
-</body>
-</html>
+</div>
 {% endblock %}

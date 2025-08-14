@@ -17,12 +17,13 @@ class MovieRating(models.Model):
         ('0', 'dislike'),
         ('1', 'like'),
         ('2', 'love'),
-        ('3', 'watched')
+
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='movie_ratings')
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='ratings')
-    rating = models.CharField(max_length=10, choices=RATING_CHOICES)
+    rating = models.CharField(max_length=10, choices=RATING_CHOICES, null=True, blank=True)
+    watched = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ('user', 'movie')

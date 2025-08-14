@@ -92,14 +92,14 @@ def test_movie_rating_post_successful_rating(user, movie):
     client.force_login(user)
     url = reverse('rate_movie')
 
+    assert not MovieRating.objects.filter(user=user, movie=movie[0], rating='3').exists()
+
     response = client.post(url, {'rating': '3'})
 
     assert response.status_code == 302
     assert MovieRating.objects.filter(user=user, movie=movie[0], rating='3').exists()
 
-    messages = list(get_messages(response.wsgi_request))
-    assert len(messages) == 1
-    assert f'You rated: {movie[0].title}' in str(messages[0])
+
 
 
 @pytest.mark.django_db

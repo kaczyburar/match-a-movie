@@ -1,10 +1,7 @@
-# movies/views.py
 from django.shortcuts import redirect
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib import messages
 from django.views.generic import TemplateView
 from .models import Movie, MovieRating
-from django.db.models import Avg, Count
 
 
 class MovieRatingView(LoginRequiredMixin, TemplateView):
@@ -40,29 +37,42 @@ class MovieRatingView(LoginRequiredMixin, TemplateView):
         movie = self.get_object()
 
         if not movie:
-            messages.info(request, 'No movies to rate.')
             return redirect('rate_movie')
 
         rating = request.POST.get('rating')
-
-        if rating in ['0', '1', '2', '3']:
+        if rating in ['0', '1', '2', 'watched']:
             if not MovieRating.objects.filter(user=request.user, movie=movie).exists():
-                MovieRating.objects.create(
-                    user=request.user,
-                    movie=movie,
-                    rating=rating
-                )
+
+                if rating == 'watched':
+                    MovieRating.objects.create(
+                        user=request.user,
+                        movie=movie,
+                        rating=None,
+                        watched=True,
+                    )
+                else:
+                    MovieRating.objects.create(
+                        user=request.user,
+                        movie=movie,
+                        rating=rating,
+                        watched=False
+                    )
+
+
                 self.update_movie_stats(movie)
-                messages.success(request, f'You rated: {movie.title}')
 
         return redirect('rate_movie')
 
     def update_movie_stats(self, movie):
-        ratings = MovieRating.objects.filter(movie=movie)
-        stats = ratings.aggregate(
-            average_rating=Avg('rating'),
-            total_ratings=Count('id')
-        )
-        movie.average_rating = round(stats['average_rating'], 2) if stats['average_rating'] else 0
-        movie.total_ratings = stats['total_ratings']
+        ratings = MovieRating.objects.filter(movie=movie, rating__isnull=False)
+
+        if ratings.exists():
+            rating_values = [int(r.rating) for r in ratings]
+            average_rating = sum(rating_values) / len(rating_values)
+            movie.average_rating = round(average_rating, 2)
+            movie.total_ratings = len(rating_values)
+        else:
+            movie.average_rating = 0.00
+            movie.total_ratings = 0
+
         movie.save()
