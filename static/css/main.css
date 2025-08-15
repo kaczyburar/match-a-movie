@@ -1143,8 +1143,8 @@ input[type="submit"]:hover {
     background: rgba(102, 126, 234, 0.05);
     border-top: 1px solid rgba(102, 126, 234, 0.1);
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 10px; /* Odstęp między przyciskami */
 }
 
 .movie-footer .trailer-link {
@@ -1156,6 +1156,7 @@ input[type="submit"]:hover {
     border: 1px solid #667eea;
     border-radius: 6px;
     transition: all 0.3s ease;
+    display: inline-block;
 }
 
 .movie-footer .trailer-link:hover {
@@ -1163,9 +1164,11 @@ input[type="submit"]:hover {
     color: white;
 }
 
+
 .global-rating {
     font-size: 11px;
     color: #888;
+    margin-left: auto;
 }
 
 .no-movies {
@@ -1355,4 +1358,26 @@ input[type="submit"]:hover {
     .rooms-grid {
         grid-template-columns: repeat(4, 1fr);
     }
+}
+
+button.movie-footer-watched-btn {
+    color: #e83e8c !important;
+    text-decoration: none !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    padding: 6px 12px !important;
+    border: 1px solid #e83e8c !important;
+    border-radius: 6px !important;
+    transition: all 0.3s ease !important;
+    display: inline-block !important;
+    margin-left: 5px !important;
+    background: transparent !important;
+    cursor: pointer !important;
+    font-family: inherit !important;
+}
+
+button.movie-footer-watched-btn:hover {
+    background: #e83e8c !important;
+    color: white !important;
+    border-color: #e83e8c !important;
 }

@@ -83,8 +83,19 @@ class RoomDetailView(LoginRequiredMixin, View):
 
         room_members = room.members.all()
 
+        movies_watched_by_all = Movie.objects.filter(
+            ratings__user__in=room_members,
+            ratings__watched=True
+        ).annotate(
+            watched_count=Count('ratings', filter=Q(ratings__watched=True, ratings__user__in=room_members))
+        ).filter(
+            watched_count=room_members.count()
+        ).values_list('id', flat=True)
+
         top_movies = Movie.objects.filter(
             ratings__user__in=room_members
+        ).exclude(
+            id__in=movies_watched_by_all
         ).annotate(
             room_avg_rating=Avg('ratings__rating', filter=Q(ratings__user__in=room_members)),
             room_ratings_count=Count('ratings', filter=Q(ratings__user__in=room_members))
@@ -128,6 +139,32 @@ class RoomDetailView(LoginRequiredMixin, View):
 
     def post(self, request, pk):
         room = Room.objects.get(pk=pk)
+
+        if 'mark_watched_movie_id' in request.POST:
+            if request.user != room.host:
+                messages.error(request, 'Only the host can mark movies as watched for all members.')
+                return redirect('room_detail', pk=pk)
+
+            movie_id = request.POST.get('mark_watched_movie_id')
+            try:
+                movie = Movie.objects.get(id=movie_id)
+                room_members = room.members.all()
+
+                for member in room_members:
+                    rating, created = MovieRating.objects.get_or_create(
+                        user=member,
+                        movie=movie,
+                        defaults={'watched': True}
+                    )
+                    if not created:
+                        rating.watched = True
+                        rating.save()
+
+                messages.success(request, f'Movie "{movie.title}" has been marked as watched for all room members.')
+            except Movie.DoesNotExist:
+                messages.error(request, 'Movie not found.')
+
+            return redirect('room_detail', pk=pk)
 
         if 'join_request_id' in request.POST and 'action' in request.POST:
             join_request_id = request.POST.get('join_request_id')

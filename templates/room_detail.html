@@ -95,8 +95,7 @@
                         <div class="movie-info">
                             <h4 class="movie-name">{{ movie_data.movie.title }}</h4>
                             <p class="movie-desc">{{ movie_data.movie.description|truncatechars:120 }}</p>
-
-                            <!-- Room Average Rating -->
+                        
                             <div class="rating-info">
                                 <div class="average-rating">
                                     <span class="rating-label">Room Average:</span>
@@ -106,8 +105,7 @@
                                     Rated by {{ movie_data.room_ratings_count }} members
                                 </div>
                             </div>
-
-                            <!-- Rating Breakdown -->
+                        
                             <div class="rating-breakdown">
                                 <span class="breakdown-label">Rating Details:</span>
                                 <div class="breakdown-tags">
@@ -131,13 +129,24 @@
                     <div class="movie-footer">
                         {% if movie_data.movie.trailer_url %}
                             <a href="{{ movie_data.movie.trailer_url }}"
-                               target="_blank"
-                               class="trailer-link">
-                                🎬 Watch Trailer
+                                target="_blank"
+                                class="trailer-link">
+                                 🎬 Watch Trailer
                             </a>
                         {% endif %}
+    
+                        {% if request.user == room.host %}
+                             <form method="post" style="display: inline;">
+                                {% csrf_token %}
+                               <input type="hidden" name="mark_watched_movie_id" value="{{ movie_data.movie.id }}">
+                                 <button type="submit" class="movie-footer-watched-btn">
+                                    👁Watched
+                                </button>
+                             </form>
+                        {% endif %}
+    
                         <span class="global-rating">
-                            Global: {{ movie_data.movie.average_rating|floatformat:1 }}
+                             Global: {{ movie_data.movie.average_rating|floatformat:1 }}
                         </span>
                     </div>
                 </div>
