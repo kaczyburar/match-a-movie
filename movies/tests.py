@@ -92,12 +92,12 @@ def test_movie_rating_post_successful_rating(user, movie):
     client.force_login(user)
     url = reverse('rate_movie')
 
-    assert not MovieRating.objects.filter(user=user, movie=movie[0], rating='3').exists()
+    assert not MovieRating.objects.filter(user=user, movie=movie[0], rating=2).exists()
 
-    response = client.post(url, {'rating': '3'})
+    response = client.post(url, {'rating': 2})
 
     assert response.status_code == 302
-    assert MovieRating.objects.filter(user=user, movie=movie[0], rating='3').exists()
+    assert MovieRating.objects.filter(user=user, movie=movie[0], rating=2).exists()
 
 
 
@@ -109,12 +109,12 @@ def test_movie_rating_post_updates_movie_stats(user, movie):
     url = reverse('rate_movie')
 
     other_user = User.objects.create_user(username='other', password='test123')
-    MovieRating.objects.create(user=other_user, movie=movie[0], rating='1')
+    MovieRating.objects.create(user=other_user, movie=movie[0], rating=1)
 
-    client.post(url, {'rating': '3'})
+    client.post(url, {'rating': 2})
 
     movie[0].refresh_from_db()
-    assert movie[0].average_rating == 2.0  # (1 + 3) / 2
+    assert movie[0].average_rating == 1.5
     assert movie[0].total_ratings == 2
 
 
@@ -122,16 +122,17 @@ def test_movie_rating_post_updates_movie_stats(user, movie):
 def test_movie_rating_post_all_movies_rated(user, movie):
     client = Client()
     client.force_login(user)
-    MovieRating.objects.create(user=user, movie=movie[0], rating='2')
-    MovieRating.objects.create(user=user, movie=movie[1], rating='3')
+    MovieRating.objects.create(user=user, movie=movie[0], rating=1)
+    MovieRating.objects.create(user=user, movie=movie[1], rating=2)
 
     url = reverse('rate_movie')
-    response = client.post(url, {'rating': '3'})
+    response = client.post(url, {'rating': 2})
 
     assert response.status_code == 302
     messages = list(get_messages(response.wsgi_request))
     assert len(messages) == 1
     assert 'No movies to rate.' in str(messages[0])
+
 
 
 @pytest.mark.django_db

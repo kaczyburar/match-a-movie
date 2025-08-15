@@ -29,14 +29,12 @@
                     <input type="submit" value="Login">
                 {% endif %}
             </form>
-
-            {% if not user.is_authenticated %}
                 {% if 'register' in request.resolver_match.url_name %}
                     <p><a href="{% url 'login' %}" class="register-btn">Login</a></p>
                 {% else %}
                     <p><a href="{% url 'register' %}" class="register-btn">Register</a></p>
                 {% endif %}
-            {% endif %}
+          
         </div>
     </div>
 </body>

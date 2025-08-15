@@ -2,6 +2,7 @@ from django.shortcuts import redirect
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
 from .models import Movie, MovieRating
+from django.contrib import messages
 
 
 class MovieRatingView(LoginRequiredMixin, TemplateView):
@@ -37,6 +38,7 @@ class MovieRatingView(LoginRequiredMixin, TemplateView):
         movie = self.get_object()
 
         if not movie:
+            messages.info(request, 'No movies to rate.')
             return redirect('rate_movie')
 
         rating = request.POST.get('rating')
