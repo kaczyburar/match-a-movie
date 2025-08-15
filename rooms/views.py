@@ -100,11 +100,13 @@ class RoomDetailView(LoginRequiredMixin, View):
             room_avg_rating=Avg('ratings__rating', filter=Q(ratings__user__in=room_members)),
             room_ratings_count=Count('ratings', filter=Q(ratings__user__in=room_members))
         ).filter(
-            room_ratings_count__gt=0
+            room_ratings_count__gt=0,
+            room_avg_rating__gte=1.0
         ).order_by(
             '-room_avg_rating',
             '-room_ratings_count'
         )[:10]
+
 
         movies_with_details = []
         for movie in top_movies:
