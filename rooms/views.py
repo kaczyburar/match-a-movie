@@ -143,10 +143,6 @@ class RoomDetailView(LoginRequiredMixin, View):
         room = Room.objects.get(pk=pk)
 
         if 'mark_watched_movie_id' in request.POST:
-            if request.user != room.host:
-                messages.error(request, 'Only the host can mark movies as watched for all members.')
-                return redirect('room_detail', pk=pk)
-
             movie_id = request.POST.get('mark_watched_movie_id')
             try:
                 movie = Movie.objects.get(id=movie_id)
@@ -211,13 +207,8 @@ class RoomDetailView(LoginRequiredMixin, View):
 
 
 def search_users(request, pk):
-    if not request.user.is_authenticated:
-        return JsonResponse({'error': 'Unauthorized'}, status=401)
-
     try:
         room = Room.objects.get(pk=pk)
-        if request.user != room.host and request.user not in room.members.all():
-            return JsonResponse({'error': 'Access denied'}, status=403)
     except Room.DoesNotExist:
         return JsonResponse({'error': 'Room not found'}, status=404)
 
