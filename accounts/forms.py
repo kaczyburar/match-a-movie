@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.models import User
 
 class RegisterForm(forms.ModelForm):
+    username = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Login'}))
     password = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Password'}))
     confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Confirm Password'}))
 
