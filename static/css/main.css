@@ -456,7 +456,6 @@ input[type="submit"]:hover {
     margin-left: 15px;
 }
 
-/* Original movie-content for rating page */
 .movie-content {
     display: grid;
     grid-template-columns: 350px 1fr;
@@ -722,7 +721,6 @@ input[type="submit"]:hover {
     color: white;
 }
 
-/* Room Detail Styles */
 .room-detail-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -771,7 +769,6 @@ input[type="submit"]:hover {
     font-size: 18px;
 }
 
-/* Friends Section */
 .friends-section {
     background: rgba(255, 255, 255, 0.95);
     border-radius: 20px;
@@ -796,7 +793,7 @@ input[type="submit"]:hover {
     grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
 }
 
-/* Invite Section */
+
 .invite-section h3,
 .join-requests-section h3,
 .members-section h3 {
@@ -883,7 +880,7 @@ input[type="submit"]:hover {
     font-style: italic;
 }
 
-/* Join Requests Section */
+
 .requests-list {
     display: flex;
     flex-direction: column;
@@ -920,7 +917,6 @@ input[type="submit"]:hover {
     border-radius: 6px;
 }
 
-/* Members Section */
 .members-list {
     display: flex;
     flex-direction: column;
@@ -956,7 +952,7 @@ input[type="submit"]:hover {
     font-weight: 500;
 }
 
-/* Top Movies Section in Room Detail */
+
 .top-movies-section {
     margin-top: 40px;
 }
@@ -998,13 +994,12 @@ input[type="submit"]:hover {
     box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
 }
 
-/* Movie card content for room detail (different from rating page) */
 .movie-card .movie-content {
     display: flex;
     height: 220px;
-    grid-template-columns: unset; /* Override rating page grid */
-    gap: unset; /* Override rating page gap */
-    margin-top: unset; /* Override rating page margin */
+    grid-template-columns: unset;
+    gap: unset;
+    margin-top: unset;
 }
 
 .movie-card .movie-poster {
@@ -1028,8 +1023,8 @@ input[type="submit"]:hover {
     align-items: center;
     color: #667eea;
     border-right: 1px solid rgba(102, 126, 234, 0.2);
-    border-radius: 0; /* Override rating page border-radius */
-    border: none; /* Override rating page border */
+    border-radius: 0;
+    border: none;
 }
 
 .movie-card .poster-placeholder span {
@@ -1144,7 +1139,7 @@ input[type="submit"]:hover {
     border-top: 1px solid rgba(102, 126, 234, 0.1);
     display: flex;
     align-items: center;
-    gap: 10px; /* Odstęp między przyciskami */
+    gap: 10px;
 }
 
 .movie-footer .trailer-link {
@@ -1193,7 +1188,6 @@ input[type="submit"]:hover {
     margin: 0;
 }
 
-/* Responsive Design */
 @media (max-width: 1024px) {
     .movie-content {
         grid-template-columns: 280px 1fr;
@@ -1232,7 +1226,6 @@ input[type="submit"]:hover {
         padding: 10px;
     }
 
-    /* Original movie rating page responsive */
     .movie-content {
         grid-template-columns: 1fr;
         gap: 20px;

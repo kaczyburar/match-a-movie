@@ -92,6 +92,8 @@ class RoomDetailView(LoginRequiredMixin, View):
             watched_count=room_members.count()
         ).values_list('id', flat=True)
 
+
+
         top_movies = Movie.objects.filter(
             ratings__user__in=room_members
         ).exclude(
@@ -119,7 +121,7 @@ class RoomDetailView(LoginRequiredMixin, View):
                 'dislike': room_ratings.filter(rating='0').count(),
                 'like': room_ratings.filter(rating='1').count(),
                 'love': room_ratings.filter(rating='2').count(),
-                'watched': room_ratings.filter(rating='3').count(),
+                'watched': room_ratings.filter(watched=True).count(),
             }
 
             movies_with_details.append({
@@ -207,21 +209,12 @@ class RoomDetailView(LoginRequiredMixin, View):
 
 
 def search_users(request, pk):
-    try:
-        room = Room.objects.get(pk=pk)
-    except Room.DoesNotExist:
-        return JsonResponse({'error': 'Room not found'}, status=404)
-
-    query = request.GET.get('q', '').strip()
+    query = request.GET.get('q', '')
 
     if len(query) < 3:
         return JsonResponse({'users': []})
 
-    users = User.objects.exclude(
-        id__in=room.members.all().values_list('id', flat=True)
-    ).filter(
-        username__icontains=query
-    ).values('id', 'username')[:10]
+    users = User.objects.filter(username__icontains=query).values('username')[:5]
 
     return JsonResponse({'users': list(users)})
 
